@@ -1,0 +1,24 @@
+{
+  "name": "puzzley",
+  "version": "0.0.1",
+  "description": "Create image gallery without default column count!",
+  "main": "scripts/puzzley.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hepsiburada/puzzley.git"
+  },
+  "keywords": [
+    "puzzley",
+    "flex",
+    "image"
+  ],
+  "author": "Volkan Tağal",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hepsiburada/puzzley/issues"
+  },
+  "homepage": "https://github.com/hepsiburada/puzzley#readme"
+}
