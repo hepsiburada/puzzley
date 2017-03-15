@@ -7,7 +7,7 @@
 		gutter: 16
 	};
 
-  $.fn.createFlex = function (options) {
+  $.fn.puzzley = function (options) {
 
   	if(!options) {
   		options = defaultOptions;
