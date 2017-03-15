@@ -1,188 +1,200 @@
-(function($) {
+(function ($) {
   "use strict";
 
   var defaultOptions = {
-		contentWidth: 960,
-		itemClass: '.categoryBanner',
-		gutter: 16
-	};
+    contentWidth: 960,
+    itemClass: '.categoryBanner',
+    gutter: 16
+  };
 
   $.fn.puzzley = function (options) {
+    if (!options) {
+      options = defaultOptions;
+    } else {
+      options = Object.assign(defaultOptions, options);
+    }
 
-  	if(!options) {
-  		options = defaultOptions;
-  	} else {
-  		options = Object.assign(defaultOptions, options);
-  	}
+    var $contentElement = this;
+    var index = 0;
+    var dataObject = [];
+    var activeObject = {row: []};
 
-  	var $element = this;
-  	
-    var $contentElement = this,
-        contentWidth = $contentElement.outerWidth(),
-        index = 0,
-        dataObject = [],
-        activeObject = { row: [] };
+    var percent = options.contentWidth / options.contentWidth;
 
-  	var percent = options.contentWidth / options.contentWidth;
-    
     var gutter = options.gutter * percent;
 
     $contentElement.width(options.contentWidth);
 
     $contentElement
-        .find(options.itemClass)
-        .each((data, e) => {
-            let $element = $(e).find('img');
-            let elementWidth = (parseInt($element.attr('width')) * percent) + (gutter * 2),
-                elementHeight = (parseInt($element.attr('height')) * percent) + (gutter * 2),
-                elementData = {
-                    width: elementWidth,
-                    height: elementHeight
-                },
-                rowWidth = 0;
+      .find(options.itemClass)
+      .each(function (data, e) {
+        var $element = $(e).find('img');
 
-            index++;
+        var elementWidth = (parseInt($element.attr('width')) * percent) + (gutter * 2);
+        var elementHeight = (parseInt($element.attr('height')) * percent) + (gutter * 2);
 
-            if (activeObject.row.length === 0) {
-                activeObject.row.push(elementData);
-            } else {
-                for (var i = 0; i < activeObject.row.length; i++) {
-                    rowWidth += activeObject.row[i].width;
-                }
+        var elementData = {
+          width: elementWidth,
+          height: elementHeight
+        };
 
-                if (rowWidth + elementWidth <= options.contentWidth) {
-                    activeObject.row.push(elementData);
-                } else {
-                    dataObject.push(activeObject);
-                    activeObject = { row: [] };
-                    activeObject.row.push(elementData);
-                }
-            }
+        var rowWidth = 0;
 
-            if (index === $contentElement.find('.categoryBanner').length) {
-                dataObject.push(activeObject);
-            }
+        index++;
 
-        });
+        if (activeObject.row.length === 0) {
+          activeObject.row.push(elementData);
+        } else {
+          for (var i = 0; i < activeObject.row.length; i++) {
+            rowWidth += activeObject.row[i].width;
+          }
+
+          if (rowWidth + elementWidth <= options.contentWidth) {
+            activeObject.row.push(elementData);
+          } else {
+            dataObject.push(activeObject);
+            activeObject = {row: []};
+            activeObject.row.push(elementData);
+          }
+        }
+
+        if (index === $contentElement.find('.categoryBanner').length) {
+          dataObject.push(activeObject);
+        }
+      });
 
     $.run(dataObject, $contentElement, options);
-  }
+  };
 
-  $.run = function(data, $contentElement, options) {
-  	let contentWidth = $contentElement.outerWidth(),
-        index = 0,
-        rowIndex = 0,
-        maxHeight = 0,
-        percent = contentWidth / options.contentWidth;
-    let spaceData = [];
-    let spaceArea = { top: 0, left: 0, width: 0, height: 0, index: rowIndex };
-    let spaceWidth = 0;
+  $.maxBy = function (array, next) {
+    var result;
+    var index = -1;
+    const length = array == null ? 0 : array.length;
 
-    $contentElement.css({ 'position': 'relative' });
+    while (++index < length) {
+      var computed;
+      const value = array[index];
+      const current = next(value);
+
+      if (current != null &&
+        (computed === undefined ? (current === current) : (current > computed))) {
+        computed = current;
+        result = value;
+      }
+    }
+    return result;
+  };
+
+  $.run = function (data, $contentElement, options) {
+    var contentWidth = $contentElement.outerWidth();
+    var index = 0;
+    var rowIndex = 0;
+    var maxHeight = 0;
+    var percent = contentWidth / options.contentWidth;
+    var spaceData = [];
+    var spaceArea = {top: 0, left: 0, width: 0, height: 0, index: rowIndex};
+
+    $contentElement.css({'position': 'relative'});
 
     for (var i = 0; i < data.length; i++) {
-        let maxWidth = 0;
-        let rowHeight = 0;
-        let rowSpace = 0;
-        let maxData = _.maxBy(data[i].row, (o) => {
-            return o['height'];
-        });
+      var maxWidth = 0;
+      var rowHeight = 0;
+      var rowSpace = 0;
 
-        if (!maxData) {
-            this.stopAnimate();
-            return false;
-        }
+      var maxData = $.maxBy(data[i].row, function (o) {
+        return o['height'];
+      });
 
-        rowHeight = maxData['height'];
+      if (!maxData) {
+        return false;
+      }
 
-        for (var j = 0; j < data[i].row.length; j++) {
-            let activeData = data[i].row[j];
-            let $element = $contentElement.find(options.itemClass).eq(index);
-            let elementTop = options.gutter + maxHeight;
-            let elementLeft = options.gutter + maxWidth;
+      rowHeight = maxData['height'];
 
-            if (spaceData[0] && spaceData[0].width >= activeData.width && (spaceData[0].left === maxWidth || maxWidth === 0) && rowIndex !== spaceData[0].index) {
-                if (rowHeight === activeData.height) {
-                    let val = 0;
-                    let spaceVal = 0;
-                    for (var a = 0; a < data[i].row.length; a++) {
-                        val += data[i].row[a].width;
-                    }
+      for (var j = 0; j < data[i].row.length; j++) {
+        var activeData = data[i].row[j];
 
-                    for (var b = 0; b < spaceData.length; b++) {
-                        spaceVal += spaceData[b].width;
-                    }
+        var $element = $contentElement.find(options.itemClass).eq(index);
 
-                    if (activeData.width < 928 && (data[i].row.length === 1 || spaceVal >= val)) {
-                        maxHeight = maxHeight - activeData.height;
-                    }
-                    maxWidth = maxWidth - activeData.width;
-                }
+        var elementTop = options.gutter + maxHeight;
+        var elementLeft = options.gutter + maxWidth;
 
-                elementTop = spaceData[0].top + (options.gutter * percent);
-                elementLeft = spaceData[0].left + (options.gutter * percent);
-
-                if (spaceData[0].height > activeData.height) {
-                    spaceArea.top = spaceData[0].top + activeData.height;
-                    spaceArea.left = spaceData[0].left;
-                    spaceArea.width = activeData.width;
-                    spaceArea.height = spaceData[0].height - activeData.height;
-                    spaceArea.index = spaceData[0].index;
-
-                    spaceData.push(spaceArea);
-                    rowSpace = rowHeight - spaceArea.height;
-                    spaceArea = { top: 0, left: 0, width: 0, height: 0, index: index };
-                }
-
-                spaceData.splice(0, 1);
-            } else if (spaceData[0] && rowIndex !== spaceData[0].index) {
-                spaceData = [];
+        if (spaceData[0] && spaceData[0].width >= activeData.width && (spaceData[0].left === maxWidth || maxWidth === 0) && rowIndex !== spaceData[0].index) {
+          if (rowHeight === activeData.height) {
+            var val = 0;
+            var spaceVal = 0;
+            for (var a = 0; a < data[i].row.length; a++) {
+              val += data[i].row[a].width;
             }
 
-            $element.css({ 'position': 'absolute' });
-            $element.css({ 'left': elementLeft, 'top': elementTop, 'width': activeData.width, 'height': activeData.height });
-
-            if (rowHeight > activeData.height) {
-                spaceArea.top = maxHeight + activeData.height;
-                spaceArea.left = maxWidth;
-                spaceArea.width = activeData.width;
-                spaceArea.height = rowHeight - activeData.height;
-                spaceArea.index = rowIndex;
-
-                spaceData.push(spaceArea);
-                spaceArea = { top: 0, left: 0, width: 0, height: 0, index: index };
+            for (var b = 0; b < spaceData.length; b++) {
+              spaceVal += spaceData[b].width;
             }
 
-            maxWidth += activeData.width;
-            index++;
-        }
-
-        if (contentWidth > maxWidth && maxWidth !== 0) {
-            spaceArea.top = maxHeight;
-            spaceArea.left = maxWidth;
-            spaceArea.width = contentWidth - maxWidth;
-            spaceArea.height = rowHeight;
-            spaceArea.index = rowIndex;
-
-            if ((spaceArea.width > options.gutter * 2)) {
-                spaceData.push(spaceArea);
-                spaceArea = { top: 0, left: 0, width: 0, height: 0, index: rowIndex };
+            if (activeData.width < 928 && (data[i].row.length === 1 || spaceVal >= val)) {
+              maxHeight = maxHeight - activeData.height;
             }
-            
-        } else {
-            spaceData = [];
+            maxWidth = maxWidth - activeData.width;
+          }
+
+          elementTop = spaceData[0].top + (options.gutter * percent);
+          elementLeft = spaceData[0].left + (options.gutter * percent);
+
+          if (spaceData[0].height > activeData.height) {
+            spaceArea.top = spaceData[0].top + activeData.height;
+            spaceArea.left = spaceData[0].left;
+            spaceArea.width = activeData.width;
+            spaceArea.height = spaceData[0].height - activeData.height;
+            spaceArea.index = spaceData[0].index;
+
+            spaceData.push(spaceArea);
+            rowSpace = rowHeight - spaceArea.height;
+            spaceArea = {top: 0, left: 0, width: 0, height: 0, index: index};
+          }
+
+          spaceData.splice(0, 1);
+        } else if (spaceData[0] && rowIndex !== spaceData[0].index) {
+          spaceData = [];
         }
 
-        maxHeight += rowHeight - rowSpace;
+        $element.css({'position': 'absolute'});
+        $element.css({'left': elementLeft, 'top': elementTop, 'width': activeData.width, 'height': activeData.height});
 
-        $contentElement.css({ 'height': maxHeight + options.gutter * 2 + 'px' });
-        rowIndex++;
+        if (rowHeight > activeData.height) {
+          spaceArea.top = maxHeight + activeData.height;
+          spaceArea.left = maxWidth;
+          spaceArea.width = activeData.width;
+          spaceArea.height = rowHeight - activeData.height;
+          spaceArea.index = rowIndex;
+
+          spaceData.push(spaceArea);
+          spaceArea = {top: 0, left: 0, width: 0, height: 0, index: index};
+        }
+
+        maxWidth += activeData.width;
+        index++;
+      }
+
+      if (contentWidth > maxWidth && maxWidth !== 0) {
+        spaceArea.top = maxHeight;
+        spaceArea.left = maxWidth;
+        spaceArea.width = contentWidth - maxWidth;
+        spaceArea.height = rowHeight;
+        spaceArea.index = rowIndex;
+
+        if ((spaceArea.width > options.gutter * 2)) {
+          spaceData.push(spaceArea);
+          spaceArea = {top: 0, left: 0, width: 0, height: 0, index: rowIndex};
+        }
+
+      } else {
+        spaceData = [];
+      }
+
+      maxHeight += rowHeight - rowSpace;
+
+      $contentElement.css({'height': maxHeight + options.gutter * 2 + 'px'});
+      rowIndex++;
     }
-
-    this.stopAnimate($contentElement);
-  }
-
-  $.stopAnimate = function($contentElement) {
-      $contentElement.removeClass('preLoader');
-  }
+  };
 })(jQuery);
